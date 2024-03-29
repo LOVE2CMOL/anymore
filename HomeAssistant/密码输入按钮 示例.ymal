@@ -1,0 +1,117 @@
+#### 控制台部分
+
+square: true
+type: grid
+cards:
+  - show_name: true
+    show_icon: true
+    type: custom:button-card
+    tap_action:
+      action: call-service
+      service: input_boolean.toggle
+      target:
+        entity_id: input_boolean.ce_shi_mi_ma_shu_ru_kuang_xian_shi
+    name: |
+      [[[
+        if (states['input_text.ce_shi_mi_ma_shu_ru_ti_shi'].state == '') return '密码输入按钮';
+        return states['input_text.ce_shi_mi_ma_shu_ru_ti_shi'].state;
+      ]]]
+    entity: input_boolean.ce_shi_mi_ma_kai_guan
+    show_state: true
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: input_boolean.ce_shi_mi_ma_shu_ru_kuang_xian_shi
+        state: 'on'
+    card:
+      type: entities
+      entities:
+        - input_text.ce_shi_mi_ma_shu_ru_kuang
+      show_header_toggle: false
+title: 密码输入示例
+columns: 2
+
+
+
+### 自动化部分1--检测密码
+
+alias: 测试--密码按钮--检测密码
+trigger:
+  - platform: state
+    entity_id: input_text.ce_shi_mi_ma_shu_ru_kuang
+condition: []
+action:
+  - if:
+      - condition: template
+        value_template: "{{ trigger.to_state.state == '123456' }}"
+    then:
+      - service: input_boolean.toggle
+        target:
+          entity_id:
+            - input_boolean.ce_shi_mi_ma_kai_guan
+        data: {}
+      - service: input_text.set_value
+        metadata: {}
+        data:
+          entity_id: input_text.ce_shi_mi_ma_shu_ru_ti_shi
+          value: 密码正确
+    else:
+      - service: input_text.set_value
+        metadata: {}
+        data:
+          entity_id: input_text.ce_shi_mi_ma_shu_ru_ti_shi
+          value: 密码错误
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 3
+      milliseconds: 0
+  - service: input_text.set_value
+    metadata: {}
+    data:
+      entity_id: input_text.ce_shi_mi_ma_shu_ru_ti_shi
+      value: ""
+mode: single
+
+### 自动化部分2--密码自动清空
+alias: 测试--密码按钮--密码自动清空
+description: ""
+trigger:
+  - platform: state
+    entity_id:
+      - input_boolean.ce_shi_mi_ma_kai_guan
+      - input_boolean.ce_shi_mi_ma_shu_ru_kuang_xian_shi
+      - input_text.ce_shi_mi_ma_shu_ru_kuang
+action:
+  - service: input_text.set_value
+    metadata: {}
+    data:
+      entity_id: input_text.ce_shi_mi_ma_shu_ru_kuang
+      value: ""
+mode: single
+
+
+#### 辅助元素部分 （这个没有ymal）
+
+名称 测试--密码开关  
+实体ID input_boolean.ce_shi_mi_ma_kai_guan
+类型 开关
+备注 此开关负责同步状态到真实实体 用自动化监测此开关即可
+
+名称 测试--密码输入框显示
+实体ID input_boolean.ce_shi_mi_ma_shu_ru_kuang_xian_shi
+类型 开关
+
+名称 测试--密码输入框
+实体ID input_text.ce_shi_mi_ma_shu_ru_kuang
+类型 文本
+显示模式 密码
+最小长度 0
+最大长度 100
+
+名称 测试--密码输入提示
+实体ID input_text.ce_shi_mi_ma_shu_ru_ti_shi
+类型 文本
+显示模式 文本
+最小长度 0
+最大长度 100
